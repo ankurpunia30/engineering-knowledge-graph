@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "chat/app.py",
+      "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb"
@@ -12,10 +12,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "chat/app.py"
+      "dest": "api/index.py"
     }
-  ],
-  "env": {
-    "GROQ_API_KEY": "@groq_api_key"
-  }
+  ]
 }
