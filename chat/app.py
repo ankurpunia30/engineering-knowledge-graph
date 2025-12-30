@@ -123,10 +123,11 @@ class EKGChatAPI:
         # Initialize Natural Language Interface
         # This will set self.use_groq flag if Groq is available
         self._init_nlp_provider()
-            
+        
+        # IMPORTANT: Setup API routes BEFORE frontend catch-all route
         self.setup_routes()
         self.load_data()
-        self.serve_frontend()
+        self.serve_frontend()  # This must be last to avoid catching API routes
     
     def _init_nlp_provider(self):
         """Initialize the Natural Language Processing provider."""
@@ -177,13 +178,17 @@ class EKGChatAPI:
             
             @self.app.get("/", response_class=HTMLResponse)
             async def serve_react_app():
+                """Serve the React app at the root URL."""
                 return FileResponse(str(frontend_build_path / "index.html"))
                 
-            # Catch-all route for React Router
-            @self.app.get("/{path:path}", response_class=HTMLResponse)
-            async def catch_all(path: str):
-                if path.startswith("api/"):
+            # Catch-all route for React Router (must be last!)
+            @self.app.get("/{full_path:path}", response_class=HTMLResponse)
+            async def catch_all(full_path: str):
+                """Catch-all for React Router - serves index.html for client-side routing."""
+                # Don't catch API routes
+                if full_path.startswith("api/") or full_path == "api":
                     raise HTTPException(status_code=404, detail="API endpoint not found")
+                # Serve index.html for all other routes (React Router handles them)
                 return FileResponse(str(frontend_build_path / "index.html"))
         else:
             @self.app.get("/", response_class=HTMLResponse)
