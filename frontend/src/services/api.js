@@ -12,7 +12,7 @@ export const api = axios.create({
 export const chatService = {
   async sendMessage(message) {
     try {
-      const response = await api.post('/chat', { message });
+      const response = await api.post('/api/chat', { message });
       return response.data;
     } catch (error) {
       console.error('Chat service error:', error);
@@ -22,7 +22,7 @@ export const chatService = {
 
   async getGraphData() {
     try {
-      const response = await api.get('/graph/data');
+      const response = await api.get('/api/graph/data');
       return response.data;
     } catch (error) {
       console.error('Graph data error:', error);
@@ -32,7 +32,7 @@ export const chatService = {
 
   async getGraphStats() {
     try {
-      const response = await api.get('/graph/stats');
+      const response = await api.get('/api/graph/stats');
       return response.data;
     } catch (error) {
       console.error('Graph stats error:', error);
@@ -42,7 +42,7 @@ export const chatService = {
 
   async searchNodes(query) {
     try {
-      const response = await api.get(`/graph/search?q=${encodeURIComponent(query)}`);
+      const response = await api.get(`/api/graph/search?q=${encodeURIComponent(query)}`);
       return response.data;
     } catch (error) {
       console.error('Search error:', error);

@@ -98,9 +98,17 @@ class EKGChatAPI:
         )
         
         # Add CORS middleware for React frontend
+        # Allow localhost for development and Render URL for production
+        allowed_origins = [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "https://engineering-knowledge-graph-oki5.onrender.com",
+            "https://engineering-knowledge-graph.onrender.com",
+        ]
+        
         self.app.add_middleware(
             CORSMiddleware,
-            allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+            allow_origins=allowed_origins,
             allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
