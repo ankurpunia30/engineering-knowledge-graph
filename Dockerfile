@@ -24,9 +24,13 @@ EXPOSE 8000
 # Set Python path
 ENV PYTHONPATH=/app
 
+# Set default port
+ENV PORT=8000
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+    CMD curl -f http://localhost:$PORT/health || exit 1
 
 # Run the FastAPI application with uvicorn
-CMD ["sh", "-c", "uvicorn chat.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Use sh -c to properly expand the PORT environment variable
+CMD sh -c "uvicorn chat.app:app --host 0.0.0.0 --port $PORT"
