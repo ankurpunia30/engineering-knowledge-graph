@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  ekg:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./data:/app/data"
+    environment:
+      - PYTHONPATH=/app
+    command: python main.py --host 0.0.0.0 --port 8000
+
+  # Optional: Add a database for persistent storage (future enhancement)
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     - POSTGRES_DB=ekg
+  #     - POSTGRES_USER=ekg
+  #     - POSTGRES_PASSWORD=ekg_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data:

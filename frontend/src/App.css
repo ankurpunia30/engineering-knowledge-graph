@@ -1,0 +1,389 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import modern fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base configuration */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #374151;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+/* Professional workspace design system */
+.workspace-shell {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.system-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.panel-toolbar {
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+.nav-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: -0.025em;
+}
+
+.section-meta {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .7;
+  }
+}
+
+/* Professional button system */
+.action-button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.action-button-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+  /* Remove transform that causes movement */
+  transform: none;
+}
+
+.action-button-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.action-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.action-button-secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  color: #374151;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Professional card system */
+.elevated-card {
+  background: white;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.elevated-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+  /* Remove transform that causes movement */
+  transform: none;
+}
+
+/* Professional input system */
+.system-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(249, 250, 251, 0.8);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  transition: all 0.15s ease-in-out;
+  backdrop-filter: blur(10px);
+}
+
+.system-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.system-input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* Loading animations */
+.loading-ring {
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced animations */
+.enter-fade {
+  animation: enterFade 0.4s ease-out;
+}
+
+.enter-scale {
+  animation: enterScale 0.3s ease-out;
+}
+
+@keyframes enterFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes enterScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Simple ResizeObserver error suppression at CSS level */
+* {
+  /* Prevent resize observation errors in some browsers */
+  resize: none;
+}
+
+/* Stable animation system - prevent layout shifts */
+.action-button-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+  /* Removed transform to prevent UI movement */
+}
+
+.elevated-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+  /* Removed transform to prevent UI movement */
+}
+
+/* Stable animations that don't cause layout shift */
+.enter-fade {
+  animation: enterFadeStable 0.4s ease-out;
+}
+
+.enter-scale {
+  animation: enterScaleStable 0.3s ease-out;
+}
+
+@keyframes enterFadeStable {
+  from {
+    opacity: 0;
+    /* Remove translateY to prevent movement */
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes enterScaleStable {
+  from {
+    opacity: 0;
+    /* Keep scale minimal to prevent noticeable movement */
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ResizeObserver error suppression at CSS level */
+* {
+  /* Prevent resize observation errors */
+  resize: none;
+}
+
+/* Container query containment for stability */
+.workspace-shell {
+  contain: layout style;
+}
+
+.system-panel {
+  contain: layout style;
+}
+
+/* Prevent unnecessary repaints and reflows */
+.chat-messages {
+  contain: strict;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stable scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Prevent jump on content load */
+.min-height-stable {
+  min-height: calc(100vh - 200px);
+}
+
+/* Prevent layout shift during loading */
+.loading-stable {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Professional scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .workspace-shell {
+    flex-direction: column;
+  }
+  
+  .system-panel {
+    width: 100% !important;
+    border-right: none;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  }
+  
+  .panel-toolbar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .section-heading {
+    font-size: 1rem;
+  }
+  
+  .nav-section {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+/* Enhanced focus states for accessibility */
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .workspace-shell {
+    background: white;
+  }
+  
+  .system-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+  }
+  
+  .action-button-primary,
+  .action-button-secondary {
+    display: none;
+  }
+}

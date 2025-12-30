@@ -1,0 +1,49 @@
+{
+  "nodes": {
+    "demo-service-1": {
+      "id": "demo-service-1",
+      "type": "service",
+      "name": "Demo Payment Service",
+      "properties": {
+        "team": "payments",
+        "version": "1.1.0",
+        "port": 8080,
+        "environment": "demo",
+        "last_updated": "2024-01-15"
+      }
+    },
+    "demo-db-1": {
+      "id": "demo-db-1",
+      "type": "database",
+      "name": "Demo Payments DB",
+      "properties": {
+        "team": "payments",
+        "engine": "postgresql",
+        "version": "13.0",
+        "encrypted": true
+      }
+    },
+    "demo-service-2": {
+      "id": "demo-service-2",
+      "type": "service",
+      "name": "Demo User Service",
+      "properties": {
+        "team": "users",
+        "version": "2.1.0",
+        "port": 8081,
+        "environment": "demo"
+      }
+    }
+  },
+  "edges": {
+    "demo-edge-1": {
+      "id": "demo-edge-1",
+      "type": "depends_on",
+      "source": "demo-service-1",
+      "target": "demo-db-1",
+      "properties": {
+        "connection_type": "primary"
+      }
+    }
+  }
+}
