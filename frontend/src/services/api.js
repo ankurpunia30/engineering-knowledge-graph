@@ -1,23 +1,29 @@
 import axios from 'axios';
 
-// Use relative URL for production (same domain as frontend)
-// Fall back to localhost for local development
+// Determine API base URL at runtime (not build time!)
 const getApiBaseUrl = () => {
-  // If running on the same domain (production), use relative path
-  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return ''; // Empty string means relative to current domain
-  }
+  const hostname = window.location.hostname;
   // Local development
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  // Production - use same domain as frontend (empty string for relative URLs)
+  return window.location.origin;
 };
 
-const API_BASE_URL = getApiBaseUrl();
-
+// Create axios instance
 export const api = axios.create({
-  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Add request interceptor to set baseURL at runtime
+api.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 export const chatService = {

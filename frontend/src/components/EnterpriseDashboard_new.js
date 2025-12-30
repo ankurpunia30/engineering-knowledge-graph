@@ -2,7 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import './EnterpriseDashboard.css';
 
-const API_BASE = 'http://localhost:8000';
+// Determine API base URL at runtime
+const getApiBaseUrl = () => {
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  return window.location.origin;
+};
+
+const API_BASE = getApiBaseUrl();
 
 const EnterpriseDashboard = () => {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });

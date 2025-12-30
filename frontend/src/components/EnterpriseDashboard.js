@@ -24,7 +24,18 @@ import {
   Search
 } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
+// Determine API base URL at runtime
+const getApiBaseUrl = () => {
+  const hostname = window.location.hostname;
+  // Local development
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  // Production - use same domain as frontend
+  return window.location.origin;
+};
+
+const API_BASE = getApiBaseUrl();
 
 const EnterpriseDashboard = () => {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
