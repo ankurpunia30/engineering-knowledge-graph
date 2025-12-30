@@ -695,6 +695,12 @@ class EKGChatAPI:
                 "llm_provider": llm_provider,
                 "storage_backend": self.storage.get_stats().get("storage_backend", "unknown")
             }
+        
+        # Add root health endpoint for Railway
+        @self.app.get("/health")
+        async def root_health_check():
+            """Root health check endpoint (redirects to /api/health)."""
+            return await health_check()
     
     def _extract_related_nodes_from_nli(self, nli_result: Dict[str, Any]) -> List[str]:
         """Extract related node IDs from NLI result for graph highlighting."""
@@ -1071,7 +1077,6 @@ class EKGChatAPI:
         
         return response
     
-    # ...existing code...
 def create_app():
     """Factory function to create the FastAPI app."""
     api = EKGChatAPI()
