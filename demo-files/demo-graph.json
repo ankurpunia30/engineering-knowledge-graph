@@ -1,0 +1,26 @@
+{
+  "graph": {
+    "nodes": [
+      {"id": "web-app", "name": "Web Application", "type": "service"},
+      {"id": "api-gateway", "name": "API Gateway", "type": "service"},
+      {"id": "auth-service", "name": "Authentication Service", "type": "service"},
+      {"id": "user-service", "name": "User Service", "type": "service"},
+      {"id": "payment-service", "name": "Payment Service", "type": "service"},
+      {"id": "postgres-db", "name": "PostgreSQL Database", "type": "database"},
+      {"id": "redis-cache", "name": "Redis Cache", "type": "cache"},
+      {"id": "platform-team", "name": "Platform Team", "type": "team"}
+    ],
+    "edges": [
+      {"source": "web-app", "target": "api-gateway", "type": "depends_on"},
+      {"source": "api-gateway", "target": "auth-service", "type": "depends_on"},
+      {"source": "api-gateway", "target": "user-service", "type": "depends_on"},
+      {"source": "api-gateway", "target": "payment-service", "type": "depends_on"},
+      {"source": "auth-service", "target": "postgres-db", "type": "uses"},
+      {"source": "auth-service", "target": "redis-cache", "type": "uses"},
+      {"source": "user-service", "target": "postgres-db", "type": "uses"},
+      {"source": "payment-service", "target": "postgres-db", "type": "uses"},
+      {"source": "platform-team", "target": "auth-service", "type": "owns"},
+      {"source": "platform-team", "target": "api-gateway", "type": "owns"}
+    ]
+  }
+}

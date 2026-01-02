@@ -1,0 +1,59 @@
+teams:
+  - name: platform-team
+    members:
+      - alice@company.com
+      - bob@company.com
+      - charlie@company.com
+    responsibilities:
+      - auth-service
+      - api-gateway
+      - infrastructure
+    slack_channel: "#platform-team"
+    
+  - name: data-team
+    members:
+      - david@company.com
+      - emma@company.com
+      - frank@company.com
+    responsibilities:
+      - postgres-db
+      - mongodb
+      - redis-cache
+      - data-pipeline
+    slack_channel: "#data-team"
+    
+  - name: backend-team
+    members:
+      - grace@company.com
+      - henry@company.com
+      - iris@company.com
+      - jack@company.com
+    responsibilities:
+      - user-service
+      - payment-service
+      - notification-service
+      - order-service
+    slack_channel: "#backend-team"
+    
+  - name: frontend-team
+    members:
+      - kate@company.com
+      - liam@company.com
+      - maya@company.com
+    responsibilities:
+      - web-app
+      - mobile-app
+      - frontend-service
+    slack_channel: "#frontend-team"
+    
+  - name: devops-team
+    members:
+      - noah@company.com
+      - olivia@company.com
+    responsibilities:
+      - kafka-broker
+      - zookeeper
+      - prometheus
+      - grafana
+      - ci-cd-pipeline
+    slack_channel: "#devops-team"
