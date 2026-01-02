@@ -21,7 +21,15 @@ import {
   TrendingUp,
   Users,
   Database,
-  Search
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Maximize2,
+  Minimize2,
+  ChevronLeft,
+  ChevronRight,
+  PanelLeftClose,
+  PanelRightClose
 } from 'lucide-react';
 
 // Determine API base URL at runtime
@@ -56,6 +64,11 @@ const EnterpriseDashboard = () => {
   const [editNodeName, setEditNodeName] = useState('');
   const [editNodeType, setEditNodeType] = useState('service');
   const [crudStatus, setCrudStatus] = useState(null);
+  const [showAddNode, setShowAddNode] = useState(false);
+  const [showNodeDetails, setShowNodeDetails] = useState(true);
+  const [isGraphFullscreen, setIsGraphFullscreen] = useState(false);
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
+  const [showRightSidebar, setShowRightSidebar] = useState(false);
   const graphRef = useRef();
   const fileInputRef = useRef();
 
@@ -103,6 +116,17 @@ const EnterpriseDashboard = () => {
     const interval = setInterval(checkBackendHealth, 30000);
     return () => clearInterval(interval);
   }, [checkBackendHealth, loadGraphData]);
+
+  // ESC key handler for fullscreen mode
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isGraphFullscreen) {
+        setIsGraphFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isGraphFullscreen]);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -620,53 +644,54 @@ const EnterpriseDashboard = () => {
           )}
 
           {activeView === 'explorer' && (
-            <div className="h-full flex bg-gray-50">
+            <div className="h-full flex bg-gray-50 overflow-hidden relative">
               {/* Left Sidebar - Search & Filter */}
-              <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="font-semibold text-gray-900 mb-3">Explorer</h3>
+              {showLeftSidebar && (
+                <div className="w-56 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+                  <div className="p-3 border-b border-gray-200">
+                    <h3 className="font-semibold text-sm text-gray-900 mb-3">Explorer</h3>
                   
                   {/* Search Input */}
-                  <div className="relative mb-3">
+                  <div className="relative mb-2">
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search nodes..."
-                      className="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Search..."
+                      className="w-full px-2 py-1.5 pl-8 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <Search size={16} className="absolute left-3 top-2.5 text-gray-400" />
+                    <Search size={14} className="absolute left-2 top-2 text-gray-400" />
                     {searchQuery && (
                       <button
                         onClick={() => {
                           setSearchQuery('');
                           setHighlightNodes(new Set());
                         }}
-                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                        className="absolute right-2 top-2 text-gray-400 hover:text-gray-600"
                       >
-                        <XCircle size={16} />
+                        <XCircle size={14} />
                       </button>
                     )}
                   </div>
 
                   {/* Filter Tabs */}
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-1 flex-wrap">
                     {[
                       { id: 'all', label: 'All', icon: Network },
-                      { id: 'service', label: 'Services', icon: Database },
-                      { id: 'database', label: 'Databases', icon: Database },
-                      { id: 'team', label: 'Teams', icon: Users }
+                      { id: 'service', label: 'Svc', icon: Database },
+                      { id: 'database', label: 'DB', icon: Database },
+                      { id: 'team', label: 'Team', icon: Users }
                     ].map((filter) => (
                       <button
                         key={filter.id}
                         onClick={() => setFilterType(filter.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                        className={`px-2 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
                           filterType === filter.id
                             ? 'bg-blue-500 text-white shadow-sm'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                       >
-                        <filter.icon size={14} />
+                        <filter.icon size={12} />
                         {filter.label}
                       </button>
                     ))}
@@ -674,11 +699,11 @@ const EnterpriseDashboard = () => {
                 </div>
 
                 {/* Node List */}
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto p-3">
                   <div className="text-xs text-gray-500 mb-2">
-                    Showing {filteredData.nodes.length} of {graphData.nodes.length} nodes
+                    {filteredData.nodes.length} of {graphData.nodes.length}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {filteredData.nodes.map((node) => (
                       <div
                         key={node.id}
@@ -690,30 +715,27 @@ const EnterpriseDashboard = () => {
                             graphRef.current.zoom(2, 1000);
                           }
                         }}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        className={`p-2 rounded-md border cursor-pointer transition-all ${
                           selectedNode?.id === node.id
-                            ? 'border-blue-500 bg-blue-50 shadow-md'
+                            ? 'border-blue-500 bg-blue-50 shadow-sm'
                             : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
                               <div
-                                className="w-2 h-2 rounded-full"
+                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: getNodeColor(node) }}
                               ></div>
-                              <div className="font-medium text-sm text-gray-900 font-mono">
+                              <div className="font-medium text-xs text-gray-900 font-mono truncate">
                                 {node.name}
                               </div>
                             </div>
                             <div className="text-xs text-gray-500">{node.type}</div>
-                            {node.team && (
-                              <div className="text-xs text-gray-400 mt-1">Team: {node.team}</div>
-                            )}
                           </div>
                           {selectedNode?.id === node.id && (
-                            <CheckCircle2 size={16} className="text-blue-500 flex-shrink-0" />
+                            <CheckCircle2 size={14} className="text-blue-500 flex-shrink-0" />
                           )}
                         </div>
                       </div>
@@ -722,8 +744,8 @@ const EnterpriseDashboard = () => {
                 </div>
 
                 {/* Stats Footer */}
-                <div className="border-t border-gray-200 p-4 bg-gray-50">
-                  <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="border-t border-gray-200 p-3 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <div className="text-gray-500">Nodes</div>
                       <div className="font-semibold text-gray-900">{filteredData.nodes.length}</div>
@@ -735,9 +757,37 @@ const EnterpriseDashboard = () => {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Center - Graph Visualization */}
               <div className="flex-1 relative">
+                {/* Left Sidebar Toggle - Always Visible */}
+                <button
+                  onClick={() => setShowLeftSidebar(!showLeftSidebar)}
+                  className="absolute left-4 top-4 z-10 p-2.5 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+                  title={showLeftSidebar ? "Hide Explorer" : "Show Explorer"}
+                >
+                  {showLeftSidebar ? <ChevronLeft size={18} className="text-gray-700" /> : <ChevronRight size={18} className="text-gray-700" />}
+                </button>
+
+                {/* Right Sidebar Toggle - Always Visible */}
+                <button
+                  onClick={() => setShowRightSidebar(!showRightSidebar)}
+                  className="absolute right-4 top-4 z-10 p-2.5 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+                  title={showRightSidebar ? "Hide Node Operations" : "Show Node Operations"}
+                >
+                  {showRightSidebar ? <ChevronRight size={18} className="text-gray-700" /> : <ChevronLeft size={18} className="text-gray-700" />}
+                </button>
+
+                {/* Fullscreen Toggle Button */}
+                <button
+                  onClick={() => setIsGraphFullscreen(!isGraphFullscreen)}
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-10 p-2 bg-white border border-gray-300 rounded-lg shadow-md hover:bg-gray-50 transition-colors"
+                  title={isGraphFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                >
+                  {isGraphFullscreen ? <Minimize2 size={18} className="text-gray-700" /> : <Maximize2 size={18} className="text-gray-700" />}
+                </button>
+
                 <ForceGraph2D
                   ref={graphRef}
                   graphData={filteredData}
@@ -776,90 +826,63 @@ const EnterpriseDashboard = () => {
               </div>
 
               {/* Right Sidebar - CRUD Operations */}
-              <div className="w-96 bg-white border-l border-gray-200 flex flex-col shadow-lg">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                    {selectedNode ? 'Edit Node' : 'Node Operations'}
+              {showRightSidebar && (
+              <div className="w-72 bg-white border-l border-gray-200 flex flex-col shadow-lg overflow-y-auto flex-shrink-0">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                  <h2 className="text-sm font-semibold text-gray-900 mb-1">
+                    Node Operations
                   </h2>
                   <p className="text-xs text-gray-600">
-                    {selectedNode ? `Editing: ${selectedNode.name}` : 'Select a node from the list or graph'}
+                    Create, view, and manage nodes
                   </p>
                 </div>
 
-                {selectedNode ? (
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {/* Node Details */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900">{selectedNode.name}</h3>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          selectedNode.type === 'service' ? 'bg-blue-100 text-blue-700' :
-                          selectedNode.type === 'database' ? 'bg-green-100 text-green-700' :
-                          selectedNode.type === 'team' ? 'bg-purple-100 text-purple-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {selectedNode.type}
-                        </span>
+                <div className="flex-1 overflow-y-auto">
+                  {/* Add New Node Section - Always at top */}
+                  <div className="border-b border-gray-200">
+                    <button
+                      onClick={() => setShowAddNode(!showAddNode)}
+                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Plus size={16} className="text-green-600" />
+                        <h4 className="font-semibold text-sm text-gray-900">Add New Node</h4>
                       </div>
-                      
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-gray-600">ID:</span>
-                          <span className="ml-2 text-gray-900 font-mono text-xs">{selectedNode.id}</span>
-                        </div>
-                        {selectedNode.language && (
-                          <div>
-                            <span className="text-gray-600">Language:</span>
-                            <span className="ml-2 text-gray-900">{selectedNode.language}</span>
+                      {showAddNode ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+                    
+                    {showAddNode && (
+                      <div className="px-4 pb-4 space-y-3">
+                        {crudStatus && !selectedNode && (
+                          <div className={`p-3 rounded-lg ${
+                            crudStatus.loading ? 'bg-blue-50 border border-blue-200' :
+                            crudStatus.success ? 'bg-green-50 border border-green-200' :
+                            'bg-red-50 border border-red-200'
+                          }`}>
+                            <div className="flex items-center gap-2 text-sm">
+                              {crudStatus.loading ? <Loader2 className="animate-spin" size={16} /> :
+                               crudStatus.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                              <span>{crudStatus.message}</span>
+                            </div>
                           </div>
                         )}
-                        {selectedNode.owner && (
-                          <div>
-                            <span className="text-gray-600">Owner:</span>
-                            <span className="ml-2 text-gray-900">{selectedNode.owner}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* CRUD Status Messages */}
-                    {crudStatus && (
-                      <div className={`p-3 rounded-lg ${
-                        crudStatus.loading ? 'bg-blue-50 border border-blue-200' :
-                        crudStatus.success ? 'bg-green-50 border border-green-200' :
-                        'bg-red-50 border border-red-200'
-                      }`}>
-                        <div className="flex items-center gap-2 text-sm">
-                          {crudStatus.loading ? <Loader2 className="animate-spin" size={16} /> :
-                           crudStatus.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-                          <span>{crudStatus.message}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Edit Node */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <Edit size={16} />
-                        Edit Node
-                      </h4>
-                      <div className="space-y-3">
+                        
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
                           <input
                             type="text"
-                            value={editNodeName || selectedNode.name}
-                            onChange={(e) => setEditNodeName(e.target.value)}
-                            placeholder={selectedNode.name}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={newNodeName}
+                            onChange={(e) => setNewNodeName(e.target.value)}
+                            placeholder="new-service"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                           />
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
-                          <select
-                            value={editNodeType || selectedNode.type}
-                            onChange={(e) => setEditNodeType(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          <select 
+                            value={newNodeType}
+                            onChange={(e) => setNewNodeType(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                           >
                             <option value="service">Service</option>
                             <option value="database">Database</option>
@@ -868,84 +891,166 @@ const EnterpriseDashboard = () => {
                           </select>
                         </div>
                         <button 
-                          onClick={handleUpdateNode}
+                          onClick={handleCreateNode}
                           disabled={crudStatus?.loading}
-                          className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {crudStatus?.loading ? 'Updating...' : 'Update Node'}
+                          <Plus size={16} />
+                          {crudStatus?.loading ? 'Creating...' : 'Create Node'}
                         </button>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    {/* Delete Node */}
-                    <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                      <h4 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
-                        <Trash2 size={16} />
-                        Delete Node
-                      </h4>
-                      <p className="text-xs text-red-700 mb-3">
-                        This will permanently delete the node and all its connections.
-                      </p>
-                      <button 
-                        onClick={handleDeleteNode}
-                        disabled={crudStatus?.loading}
-                        className="w-full px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  {/* Selected Node Details */}
+                  {selectedNode ? (
+                    <div className="border-b border-gray-200">
+                      <button
+                        onClick={() => setShowNodeDetails(!showNodeDetails)}
+                        className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-gray-50 transition-colors bg-blue-50"
                       >
-                        {crudStatus?.loading ? 'Deleting...' : 'Delete Node'}
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Network size={14} className="text-blue-600 flex-shrink-0" />
+                          <h4 className="font-semibold text-xs text-gray-900 truncate">Selected: {selectedNode.name}</h4>
+                        </div>
+                        {showNodeDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="text-center">
-                      <Network size={48} className="mx-auto text-gray-300 mb-3" />
-                      <p className="text-sm text-gray-600">Select a node to view details</p>
-                      <p className="text-xs text-gray-500 mt-1">Click any node in the graph</p>
-                    </div>
-                  </div>
-                )}
+                      
+                      {showNodeDetails && (
+                        <div className="px-3 pb-3 space-y-3">
+                          {/* Node Details */}
+                          <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="font-semibold text-gray-900">{selectedNode.name}</h3>
+                              <span className={`px-2 py-1 text-xs rounded-full ${
+                                selectedNode.type === 'service' ? 'bg-blue-100 text-blue-700' :
+                                selectedNode.type === 'database' ? 'bg-green-100 text-green-700' :
+                                selectedNode.type === 'team' ? 'bg-purple-100 text-purple-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {selectedNode.type}
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="text-gray-600">ID:</span>
+                                <span className="ml-2 text-gray-900 font-mono text-xs">{selectedNode.id}</span>
+                              </div>
+                              {selectedNode.language && (
+                                <div>
+                                  <span className="text-gray-600">Language:</span>
+                                  <span className="ml-2 text-gray-900">{selectedNode.language}</span>
+                                </div>
+                              )}
+                              {selectedNode.owner && (
+                                <div>
+                                  <span className="text-gray-600">Owner:</span>
+                                  <span className="ml-2 text-gray-900">{selectedNode.owner}</span>
+                                </div>
+                              )}
+                              {selectedNode.team && (
+                                <div>
+                                  <span className="text-gray-600">Team:</span>
+                                  <span className="ml-2 text-gray-900">{selectedNode.team}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Clear Selection Button */}
+                            <button
+                              onClick={() => setSelectedNode(null)}
+                              className="mt-3 w-full px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                            >
+                              Clear Selection
+                            </button>
+                          </div>
 
-                {/* Add New Node Section */}
-                <div className="border-t border-gray-200 p-4">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Plus size={16} />
-                    Add New Node
-                  </h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
-                      <input
-                        type="text"
-                        value={newNodeName}
-                        onChange={(e) => setNewNodeName(e.target.value)}
-                        placeholder="new-service"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+                          {/* CRUD Status Messages */}
+                          {crudStatus && (
+                            <div className={`p-3 rounded-lg ${
+                              crudStatus.loading ? 'bg-blue-50 border border-blue-200' :
+                              crudStatus.success ? 'bg-green-50 border border-green-200' :
+                              'bg-red-50 border border-red-200'
+                            }`}>
+                              <div className="flex items-center gap-2 text-sm">
+                                {crudStatus.loading ? <Loader2 className="animate-spin" size={16} /> :
+                                 crudStatus.success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+                                <span>{crudStatus.message}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Edit Node */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                              <Edit size={16} />
+                              Edit Node
+                            </h4>
+                            <div className="space-y-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                                <input
+                                  type="text"
+                                  value={editNodeName || selectedNode.name}
+                                  onChange={(e) => setEditNodeName(e.target.value)}
+                                  placeholder={selectedNode.name}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                                <select
+                                  value={editNodeType || selectedNode.type}
+                                  onChange={(e) => setEditNodeType(e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="service">Service</option>
+                                  <option value="database">Database</option>
+                                  <option value="cache">Cache</option>
+                                  <option value="team">Team</option>
+                                </select>
+                              </div>
+                              <button 
+                                onClick={handleUpdateNode}
+                                disabled={crudStatus?.loading}
+                                className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {crudStatus?.loading ? 'Updating...' : 'Update Node'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Delete Node */}
+                          <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                            <h4 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+                              <Trash2 size={16} />
+                              Delete Node
+                            </h4>
+                            <p className="text-xs text-red-700 mb-3">
+                              This will permanently delete the node and all its connections.
+                            </p>
+                            <button 
+                              onClick={handleDeleteNode}
+                              disabled={crudStatus?.loading}
+                              className="w-full px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {crudStatus?.loading ? 'Deleting...' : 'Delete Node'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
-                      <select 
-                        value={newNodeType}
-                        onChange={(e) => setNewNodeType(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="service">Service</option>
-                        <option value="database">Database</option>
-                        <option value="cache">Cache</option>
-                        <option value="team">Team</option>
-                      </select>
+                  ) : (
+                    <div className="p-4 text-center">
+                      <Network size={40} className="mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-600 font-medium">No Node Selected</p>
+                      <p className="text-xs text-gray-500 mt-1">Click any node in the graph or list to view details</p>
                     </div>
-                    <button 
-                      onClick={handleCreateNode}
-                      disabled={crudStatus?.loading}
-                      className="w-full px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Plus size={16} />
-                      {crudStatus?.loading ? 'Creating...' : 'Create Node'}
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
+              )}
             </div>
           )}
 
@@ -1341,6 +1446,117 @@ const EnterpriseDashboard = () => {
                 </>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Graph Modal */}
+      {isGraphFullscreen && (
+        <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
+          {/* Fullscreen Header */}
+          <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="font-semibold text-white text-lg">Graph Explorer - Fullscreen</h3>
+              <div className="text-sm text-gray-400">
+                {filteredData.nodes.length} nodes • {filteredData.links.length} edges
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {selectedNode && (
+                <div className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md">
+                  Selected: {selectedNode.name}
+                </div>
+              )}
+              <button
+                onClick={() => setIsGraphFullscreen(false)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors text-white"
+                title="Exit Fullscreen"
+              >
+                <Minimize2 size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Fullscreen Graph */}
+          <div className="flex-1 relative bg-gray-50">
+            <ForceGraph2D
+              ref={graphRef}
+              graphData={filteredData}
+              nodeCanvasObject={paintNode}
+              nodePointerAreaPaint={(node, color, ctx) => {
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI);
+                ctx.fill();
+              }}
+              linkDirectionalArrowLength={3.5}
+              linkDirectionalArrowRelPos={1}
+              linkColor={() => '#d1d5db'}
+              linkWidth={1.5}
+              backgroundColor="#fafafa"
+              onNodeClick={(node) => {
+                console.log('Node clicked:', node);
+                setSelectedNode(node);
+              }}
+              onNodeHover={(node) => {
+                document.body.style.cursor = node ? 'pointer' : 'default';
+              }}
+              enableNodeDrag={true}
+              enableZoomInteraction={true}
+              enablePanInteraction={true}
+            />
+
+            {/* Controls Overlay */}
+            <div className="absolute bottom-6 left-6 bg-white border border-gray-300 rounded-lg shadow-lg p-4">
+              <div className="text-xs font-medium text-gray-700 mb-2">Controls:</div>
+              <div className="space-y-1 text-xs text-gray-600">
+                <div>• Click node to select</div>
+                <div>• Drag to pan</div>
+                <div>• Scroll to zoom</div>
+                <div>• Press ESC to exit</div>
+              </div>
+            </div>
+
+            {/* Selected Node Info */}
+            {selectedNode && (
+              <div className="absolute top-6 right-6 bg-white border border-gray-300 rounded-lg shadow-lg p-4 w-80">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-gray-900">{selectedNode.name}</h4>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    selectedNode.type === 'service' ? 'bg-blue-100 text-blue-700' :
+                    selectedNode.type === 'database' ? 'bg-green-100 text-green-700' :
+                    selectedNode.type === 'team' ? 'bg-purple-100 text-purple-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {selectedNode.type}
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">ID:</span>
+                    <span className="ml-2 text-gray-900 font-mono text-xs">{selectedNode.id}</span>
+                  </div>
+                  {selectedNode.team && (
+                    <div>
+                      <span className="text-gray-600">Team:</span>
+                      <span className="ml-2 text-gray-900">{selectedNode.team}</span>
+                    </div>
+                  )}
+                  {selectedNode.language && (
+                    <div>
+                      <span className="text-gray-600">Language:</span>
+                      <span className="ml-2 text-gray-900">{selectedNode.language}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSelectedNode(null)}
+                  className="mt-3 w-full px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

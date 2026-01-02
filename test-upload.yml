@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Test API Gateway
+  test-api-gateway:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    environment:
+      - SERVICE_NAME=test-api-gateway
+      - TEAM=platform-team
+    depends_on:
+      - test-user-service
+      - test-product-service
+
+  # Test User Service
+  test-user-service:
+    image: node:18
+    ports:
+      - "3001:3000"
+    environment:
+      - SERVICE_NAME=test-user-service
+      - TEAM=users-team
+      - DATABASE_URL=postgresql://test-users-db:5432/users
+    depends_on:
+      - test-users-db
+      - test-redis-cache
+
+  # Test Product Service
+  test-product-service:
+    image: python:3.11
+    ports:
+      - "5001:5000"
+    environment:
+      - SERVICE_NAME=test-product-service
+      - TEAM=products-team
+      - DATABASE_URL=postgresql://test-products-db:5432/products
+    depends_on:
+      - test-products-db
+      - test-redis-cache
+
+  # Test Notification Service
+  test-notification-service:
+    image: node:18
+    ports:
+      - "3002:3000"
+    environment:
+      - SERVICE_NAME=test-notification-service
+      - TEAM=platform-team
+    depends_on:
+      - test-redis-cache
+
+  # Test Users Database
+  test-users-db:
+    image: postgres:15
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=users
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+
+  # Test Products Database
+  test-products-db:
+    image: postgres:15
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=products
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+
+  # Test Redis Cache
+  test-redis-cache:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    environment:
+      - CACHE_NAME=test-redis-cache
