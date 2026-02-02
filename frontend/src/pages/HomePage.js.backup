@@ -1,0 +1,905 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Database,
+  ArrowRight,
+  Menu,
+  X,
+  CheckCircle,
+  AlertTriangle,
+  Zap,
+  Shield,
+  GitBranch,
+  Users,
+  Code,
+  Mail,
+  Github,
+  Linkedin,
+  Twitter,
+  BookOpen,
+  HelpCircle,
+  FileText
+} from 'lucide-react';
+
+const HomePage = () => {
+  const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scroll for header transparency
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const keyMetrics = [
+    { value: "10x", label: "Faster Resolution", sublabel: "vs manual dependency tracking" },
+    { value: "60%", label: "Cost Reduction", sublabel: "through intelligent caching" },
+    { value: "<30s", label: "Query Response", sublabel: "for complex infrastructure" },
+    { value: "100%", label: "Auto-Discovery", sublabel: "from existing configs" }
+  ];
+
+  const coreCapabilities = [
+    {
+      icon: <Zap className="w-6 h-6" />,
+      title: "Natural Language Queries",
+      description: "Ask questions in plain English. Your team doesn't need to learn Cypher, GraphQL, or specialized query languages."
+    },
+    {
+      icon: <AlertTriangle className="w-6 h-6" />,
+      title: "Real-Time Blast Radius",
+      description: "During incidents, instantly understand impact scope. Know exactly what breaks when a service fails."
+    },
+    {
+      icon: <GitBranch className="w-6 h-6" />,
+      title: "Dependency Intelligence",
+      description: "Automatically map service dependencies from Docker Compose, Kubernetes manifests, and team configurations."
+    },
+    {
+      icon: <Shield className="w-6 h-6" />,
+      title: "Enterprise Security",
+      description: "PostgreSQL-backed auth, JWT sessions, role-based access control, and audit logging built-in."
+    }
+  ];
+
+  const problemSolutions = [
+    {
+      problem: "Incident at 3 AM: Which services are affected?",
+      before: "30 minutes of manual digging through docs and configs",
+      after: "Ask: 'What depends on Redis?' - 10 second answer",
+      savings: "95% time saved"
+    },
+    {
+      problem: "New engineer needs to understand the system",
+      before: "Days of documentation reading and tribal knowledge",
+      after: "Interactive queries reveal architecture in minutes",
+      savings: "80% faster onboarding"
+    },
+    {
+      problem: "Planning to deprecate a legacy service",
+      before: "Hours analyzing code, hoping you found everything",
+      after: "Complete impact analysis with dependency chains",
+      savings: "90% risk reduction"
+    }
+  ];
+
+  const enterpriseFeatures = [
+    "Multi-tenancy with organization isolation",
+    "PostgreSQL for production-grade data persistence",
+    "Intelligent caching layer (60% LLM cost savings)",
+    "JWT-based authentication with refresh tokens",
+    "Role-based access control (RBAC)",
+    "Audit logs for compliance",
+    "RESTful API for integrations",
+    "On-premise deployment options",
+    "SSO/SAML integration (Enterprise)",
+    "99.9% uptime SLA (Enterprise)"
+  ];
+
+  const testimonials = [
+    {
+      quote: "Cut our incident resolution time from 45 minutes to under 5 minutes. The blast radius analysis is a game-changer.",
+      author: "Sarah Chen",
+      role: "VP Engineering",
+      company: "TechCorp"
+    },
+    {
+      quote: "We saved $18,000/year in LLM costs with the intelligent caching layer. ROI in the first quarter.",
+      author: "Michael Rodriguez",
+      role: "CTO",
+      company: "DataFlow Inc"
+    },
+    {
+      quote: "New engineers are productive on day one. They can query the infrastructure instead of reading outdated docs.",
+      author: "Emily Watson",
+      role: "Engineering Manager",
+      company: "CloudScale"
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Enterprise-Grade Header */}
+      <header className={`fixed top-0 left-0 right-0 z-50 bg-white transition-shadow duration-200 ${
+        scrolled ? 'shadow-sm' : ''
+      }`}>
+        <div className="border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-14">
+              {/* Logo */}
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+                <div className="w-7 h-7 bg-gray-900">
+                  <Database className="w-7 h-7 p-1 text-white" />
+                </div>
+                <span className="text-base font-semibold text-gray-900 tracking-tight">Engineering Knowledge Graph</span>
+              </div>
+
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center gap-0.5">
+                <a href="#platform" className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                  Platform
+                </a>
+                <a href="#solutions" className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                  Solutions
+                </a>
+                <a href="#customers" className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                  Customers
+                </a>
+                <a href="#pricing" className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                  Pricing
+                </a>
+                <a href="#docs" className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                  Documentation
+                </a>
+              </nav>
+
+              {/* Actions */}
+              <div className="hidden md:flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Log in
+                </button>
+                <button
+                  onClick={() => navigate('/register')}
+                  className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium hover:bg-gray-800"
+                >
+                  Request demo
+                </button>
+              </div>
+
+              {/* Mobile menu */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-1.5 text-gray-600"
+              >
+                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {mobileMenuOpen && (
+              <div className="md:hidden border-t border-gray-200 py-3">
+                <div className="space-y-1">
+                  <a href="#platform" className="block px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                    Platform
+                  </a>
+                  <a href="#solutions" className="block px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                    Solutions
+                  </a>
+                  <a href="#customers" className="block px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                    Customers
+                  </a>
+                  <a href="#pricing" className="block px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                    Pricing
+                  </a>
+                  <a href="#docs" className="block px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-50">
+                    Documentation
+                  </a>
+                </div>
+                <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="block w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 text-left"
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="block w-full px-3 py-2 bg-gray-900 text-white text-xs font-medium hover:bg-gray-800"
+                  >
+                    Request demo
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Header Spacer */}
+      <div className="h-14"></div>
+
+      {/* Hero Section - Corporate Minimal */}
+      <section id="platform" className="py-16 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl">
+            <div className="mb-8">
+              <h1 className="text-4xl sm:text-5xl font-semibold text-gray-900 tracking-tight mb-4 leading-tight">
+                Infrastructure dependency mapping for modern engineering teams
+              </h1>
+              <p className="text-base text-gray-600 max-w-2xl leading-relaxed">
+                Automated discovery and real-time visualization of service dependencies across your infrastructure. 
+                Reduce MTTR, accelerate onboarding, and enable safer deployments.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 mb-10">
+              <button
+                onClick={() => navigate('/register')}
+                className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium hover:bg-gray-800"
+              >
+                Request demo
+              </button>
+              <button className="px-5 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">
+                View documentation
+              </button>
+            </div>
+
+            <div className="pt-8 border-t border-gray-200">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div>
+                  <div className="text-2xl font-semibold text-gray-900">500+</div>
+                  <div className="text-xs text-gray-500 mt-1">Enterprise customers</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold text-gray-900">90%</div>
+                  <div className="text-xs text-gray-500 mt-1">Reduction in MTTR</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold text-gray-900">&lt;30s</div>
+                  <div className="text-xs text-gray-500 mt-1">Average query time</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-semibold text-gray-900">SOC 2</div>
+                  <div className="text-xs text-gray-500 mt-1">Type II certified</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem Statement */}
+      <section id="solutions" className="py-14 bg-gray-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+              Critical infrastructure challenges
+            </h2>
+            <p className="text-sm text-gray-600">
+              Enterprise teams face significant operational risk from infrastructure complexity and dependency opacity.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="text-gray-400 mb-3 text-xs font-medium uppercase tracking-wide">Challenge 01</div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Incident response delays</h3>
+              <p className="text-sm text-gray-600">
+                Mean time to resolution increases 300% without dependency visibility
+              </p>
+            </div>
+
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="text-gray-400 mb-3 text-xs font-medium uppercase tracking-wide">Challenge 02</div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Knowledge fragmentation</h3>
+              <p className="text-sm text-gray-600">
+                Critical system knowledge exists only in senior engineers' heads
+              </p>
+            </div>
+
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="text-gray-400 mb-3 text-xs font-medium uppercase tracking-wide">Challenge 03</div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Deployment risk</h3>
+              <p className="text-sm text-gray-600">
+                Changes to shared services cause unexpected production outages
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Solution Overview */}
+      <section className="py-14 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                Natural language infrastructure queries
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Ask questions about your infrastructure in plain English. Get accurate, real-time answers backed by automated dependency discovery.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-1 h-1 bg-gray-900 rounded-full mt-2"></div>
+                  <p className="text-sm text-gray-600">Automated service discovery from Kubernetes, Docker Compose, and infrastructure-as-code</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1 h-1 bg-gray-900 rounded-full mt-2"></div>
+                  <p className="text-sm text-gray-600">Real-time dependency graph with impact analysis</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-1 h-1 bg-gray-900 rounded-full mt-2"></div>
+                  <p className="text-sm text-gray-600">AI-powered query understanding with context awareness</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 p-6 border border-gray-200 font-mono text-xs">
+              <div className="mb-4">
+                <div className="text-gray-400 mb-1">Q:</div>
+                <div className="text-gray-900">What services depend on payment-api?</div>
+              </div>
+              <div className="mb-4">
+                <div className="text-gray-400 mb-1">A:</div>
+                <div className="text-gray-900 space-y-1">
+                  <div>5 services directly depend on payment-api:</div>
+                  <div className="pl-4 space-y-1 mt-2">
+                    <div>• checkout-service <span className="text-red-600">[CRITICAL]</span></div>
+                    <div>• subscription-manager <span className="text-red-600">[CRITICAL]</span></div>
+                    <div>• billing-api <span className="text-orange-600">[HIGH]</span></div>
+                    <div>• invoice-generator <span className="text-orange-600">[HIGH]</span></div>
+                    <div>• analytics-processor <span className="text-gray-500">[MEDIUM]</span></div>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-gray-200 text-gray-600">
+                <div className="text-gray-400 mb-1">Recommendation:</div>
+                <div>Deploy during maintenance window with checkout-service team on standby</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases */}
+      <section id="customers" className="py-14 bg-gray-50 border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+              Enterprise use cases
+            </h2>
+            <p className="text-sm text-gray-600">
+              Trusted by platform engineering, SRE, and DevOps teams at scale-up and enterprise organizations.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="w-8 h-8 bg-gray-900 flex items-center justify-center mb-4">
+                <AlertTriangle className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Incident triage</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Instantly identify blast radius and affected services during production incidents
+              </p>
+              <div className="bg-gray-50 p-3 font-mono text-xs text-gray-600 border-l-2 border-gray-900">
+                "auth-service is down, what's impacted?"
+              </div>
+            </div>
+
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="w-8 h-8 bg-gray-900 flex items-center justify-center mb-4">
+                <Users className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Developer onboarding</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                New team members understand system architecture in hours, not weeks
+              </p>
+              <div className="bg-gray-50 p-3 font-mono text-xs text-gray-600 border-l-2 border-gray-900">
+                "how does the order flow work?"
+              </div>
+            </div>
+
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="w-8 h-8 bg-gray-900 flex items-center justify-center mb-4">
+                <Code className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Safe deployments</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Understand deployment impact before changes reach production
+              </p>
+              <div className="bg-gray-50 p-3 font-mono text-xs text-gray-600 border-l-2 border-gray-900">
+                "what breaks if I change user-db schema?"
+              </div>
+            </div>
+
+            <div className="bg-white p-6 border border-gray-200">
+              <div className="w-8 h-8 bg-gray-900 flex items-center justify-center mb-4">
+                <Shield className="w-4 h-4 text-white" />
+              </div>
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Compliance audits</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Generate dependency reports for security and compliance reviews
+              </p>
+              <div className="bg-gray-50 p-3 font-mono text-xs text-gray-600 border-l-2 border-gray-900">
+                "which services access customer PII?"
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="py-12 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="border-l-2 border-gray-900 pl-6">
+              <p className="text-base text-gray-900 mb-4 leading-relaxed">
+                "EKG reduced our mean time to resolution by 85%. During incidents, we can immediately identify affected services and dependencies. It's become essential infrastructure for our SRE team."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
+                  SC
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-900">Sarah Chen</div>
+                  <div className="text-xs text-gray-500">VP Engineering, TechCorp</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-14 bg-gray-50 border-b border-gray-200">
+
+            <div className="bg-white p-8 border border-gray-200">
+              <Code className="w-8 h-8 text-slate-900 mb-4" />
+              <h3 className="text-lg font-bold text-slate-900 mb-3">Deployment risks</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Unknown dependencies lead to unexpected production failures and rollbacks
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Solution */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="max-w-3xl mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              Ask questions. Get answers. Take action.
+            </h2>
+            <p className="text-lg text-slate-600">
+              EKG automatically maps your entire infrastructure and enables natural language queries for instant dependency insights.
+            </p>
+          </div>
+
+          {/* Example Query Card */}
+          <div className="bg-slate-50 border border-gray-200 p-8 max-w-4xl">
+            <div className="flex items-start gap-4 mb-6">
+              <div className="w-10 h-10 bg-white border border-gray-200 flex items-center justify-center text-sm font-mono flex-shrink-0">
+                Q
+              </div>
+              <div className="flex-1">
+                <p className="text-slate-900 font-medium">
+                  "What services will be affected if I take down the Redis cache?"
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-slate-900 flex items-center justify-center text-white text-sm font-mono flex-shrink-0">
+                A
+              </div>
+              <div className="flex-1">
+                <p className="text-slate-900 font-semibold mb-4">3 services depend on Redis cache:</p>
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center justify-between p-3 bg-white border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-slate-500">payments-service</span>
+                    </div>
+                    <span className="text-xs font-semibold text-red-600 bg-red-50 px-2 py-1">CRITICAL</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-white border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-slate-500">user-session-service</span>
+                    </div>
+                    <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-2 py-1">HIGH</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-white border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono text-slate-500">analytics-worker</span>
+                    </div>
+                    <span className="text-xs font-semibold text-yellow-600 bg-yellow-50 px-2 py-1">MEDIUM</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-slate-100 border-l-4 border-slate-900">
+                  <p className="text-sm text-slate-700">
+                    <strong>Recommendation:</strong> Set up Redis replica before maintenance window
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases - Real Problems Solved */}
+      <section id="solutions" className="py-20 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="max-w-3xl mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              Built for enterprise engineering teams
+            </h2>
+            <p className="text-lg text-slate-600">
+              From incident response to compliance audits, EKG provides the infrastructure intelligence your team needs.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-white p-8 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-slate-900 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">Incident Response</h3>
+                  <p className="text-slate-600 mb-4">
+                    Instantly identify blast radius and affected services during production incidents. Reduce MTTR by 90%.
+                  </p>
+                  <p className="text-sm font-mono text-slate-500">
+                    "What breaks if Redis fails?"
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-slate-900 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">Team Onboarding</h3>
+                  <p className="text-slate-600 mb-4">
+                    New engineers understand your architecture in hours, not weeks. Interactive queries replace outdated documentation.
+                  </p>
+                  <p className="text-sm font-mono text-slate-500">
+                    "Show services owned by platform team"
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-slate-900 flex items-center justify-center flex-shrink-0">
+                  <Code className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">Safe Deployments</h3>
+                  <p className="text-slate-600 mb-4">
+                    Understand impact before deploying. Identify all downstream dependencies and prevent unexpected failures.
+                  </p>
+                  <p className="text-sm font-mono text-slate-500">
+                    "What depends on auth-service v2?"
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 border border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-slate-900 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">Compliance & Audits</h3>
+                  <p className="text-slate-600 mb-4">
+                    Generate dependency reports for SOC2, HIPAA, and other compliance requirements. Full audit trail included.
+                  </p>
+                  <p className="text-sm font-mono text-slate-500">
+                    "Show all services accessing PII data"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonial */}
+      <section className="py-20 bg-slate-900">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+          <blockquote className="text-2xl lg:text-3xl text-white font-medium mb-8 leading-relaxed">
+            "EKG reduced our incident resolution time from 45 minutes to under 5 minutes. The ROI was immediate and measurable."
+          </blockquote>
+          <div className="flex items-center justify-center gap-4">
+            <div className="w-12 h-12 bg-slate-700 flex items-center justify-center text-white font-bold">
+              SC
+            </div>
+            <div className="text-left">
+              <div className="text-white font-semibold">Sarah Chen</div>
+              <div className="text-slate-400 text-sm">VP Engineering, TechCorp</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="max-w-3xl mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              Transparent pricing for teams of all sizes
+            </h2>
+            <p className="text-lg text-slate-600">
+              Start with our free tier. Scale as you grow. Enterprise support available.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Starter */}
+            <div className="bg-white border border-gray-200 p-8">
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Starter</h3>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-4xl font-bold text-slate-900">$0</span>
+                  <span className="text-slate-600">/month</span>
+                </div>
+                <p className="text-sm text-slate-600">For small teams getting started</p>
+              </div>
+              
+              <ul className="space-y-3 mb-8 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>1,000 nodes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>Natural language queries</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>Visual graph explorer</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>Community support</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full py-2.5 border border-slate-900 text-slate-900 font-semibold hover:bg-slate-900 hover:text-white transition-colors"
+              >
+                Get started
+              </button>
+            </div>
+
+            {/* Professional */}
+            <div className="bg-slate-900 text-white p-8 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-slate-900 text-xs font-bold">
+                MOST POPULAR
+              </div>
+              
+              <div className="mb-8">
+                <h3 className="text-lg font-bold mb-2">Professional</h3>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-4xl font-bold">$49</span>
+                  <span className="text-slate-400">/month</span>
+                </div>
+                <p className="text-sm text-slate-400">For growing engineering teams</p>
+              </div>
+              
+              <ul className="space-y-3 mb-8 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>25,000 nodes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>Everything in Starter</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>Advanced analytics</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>Priority support</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>Team collaboration</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => navigate('/register')}
+                className="w-full py-2.5 bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-colors"
+              >
+                Start 14-day trial
+              </button>
+            </div>
+
+            {/* Enterprise */}
+            <div className="bg-white border border-gray-200 p-8">
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Enterprise</h3>
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-4xl font-bold text-slate-900">Custom</span>
+                </div>
+                <p className="text-sm text-slate-600">For large organizations</p>
+              </div>
+              
+              <ul className="space-y-3 mb-8 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>Unlimited nodes</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>Everything in Professional</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>SSO/SAML integration</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>On-premise deployment</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>99.9% SLA</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 text-slate-900 flex-shrink-0 mt-0.5" />
+                  <span>Dedicated support</span>
+                </li>
+              </ul>
+
+              <button className="w-full py-2.5 border border-slate-900 text-slate-900 font-semibold hover:bg-slate-900 hover:text-white transition-colors">
+                Contact sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 bg-slate-900">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold text-white mb-6">
+            Ready to transform your incident response?
+          </h2>
+          <p className="text-lg text-slate-400 mb-8">
+            Join 500+ engineering teams using EKG to understand their infrastructure
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => navigate('/register')}
+              className="px-8 py-3 bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-colors inline-flex items-center justify-center gap-2"
+            >
+              Start free trial
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-8 py-3 border border-white text-white font-semibold hover:bg-white hover:text-slate-900 transition-colors"
+            >
+              View demo
+            </button>
+          </div>
+          <p className="text-sm text-slate-500 mt-6">No credit card required • 14-day trial • Cancel anytime</p>
+        </div>
+      </section>
+
+      {/* Professional Enterprise Footer */}
+      <footer id="resources" className="bg-white border-t border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-12">
+            {/* Brand */}
+            <div className="col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 bg-slate-900 flex items-center justify-center">
+                  <Database className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-lg font-bold text-slate-900">EKG</span>
+              </div>
+              <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+                Infrastructure dependency intelligence for enterprise engineering teams.
+              </p>
+              <div className="flex gap-3">
+                <a href="#" className="w-9 h-9 border border-gray-300 flex items-center justify-center text-slate-600 hover:border-slate-900 hover:text-slate-900 transition-colors">
+                  <Twitter className="w-4 h-4" />
+                </a>
+                <a href="#" className="w-9 h-9 border border-gray-300 flex items-center justify-center text-slate-600 hover:border-slate-900 hover:text-slate-900 transition-colors">
+                  <Github className="w-4 h-4" />
+                </a>
+                <a href="#" className="w-9 h-9 border border-gray-300 flex items-center justify-center text-slate-600 hover:border-slate-900 hover:text-slate-900 transition-colors">
+                  <Linkedin className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+            
+            {/* Product */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-4">Product</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#product" className="text-slate-600 hover:text-slate-900 transition-colors">Features</a></li>
+                <li><a href="#solutions" className="text-slate-600 hover:text-slate-900 transition-colors">Solutions</a></li>
+                <li><a href="#pricing" className="text-slate-600 hover:text-slate-900 transition-colors">Pricing</a></li>
+                <li><a href="/dashboard" className="text-slate-600 hover:text-slate-900 transition-colors">Demo</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Changelog</a></li>
+              </ul>
+            </div>
+            
+            {/* Company */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-4">Company</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">About</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Careers</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Blog</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Press Kit</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Contact</a></li>
+              </ul>
+            </div>
+            
+            {/* Resources */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-4">Resources</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Documentation</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">API Reference</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Guides</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Community</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Status</a></li>
+              </ul>
+            </div>
+            
+            {/* Legal */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-4">Legal</h4>
+              <ul className="space-y-3 text-sm">
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Privacy</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Terms</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Security</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Compliance</a></li>
+                <li><a href="#" className="text-slate-600 hover:text-slate-900 transition-colors">Cookies</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-gray-200">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-slate-600">
+                © 2026 Engineering Knowledge Graph. All rights reserved.
+              </p>
+              <div className="flex items-center gap-6 text-sm text-slate-600">
+                <a href="#" className="hover:text-slate-900 transition-colors">Privacy Policy</a>
+                <a href="#" className="hover:text-slate-900 transition-colors">Terms of Service</a>
+                <a href="#" className="hover:text-slate-900 transition-colors">Cookie Settings</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default HomePage;

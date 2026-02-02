@@ -1,5 +1,6 @@
 """
 LLM-powered query engine using Groq for natural language understanding.
+Enhanced with intelligent caching layer for cost optimization.
 """
 import json
 import re
@@ -7,24 +8,75 @@ from typing import Dict, Any, List, Optional
 from groq import Groq
 import os
 from dotenv import load_dotenv
+import sys
+from pathlib import Path
+
+# Add parent directory to path for cache import
+sys.path.append(str(Path(__file__).parent.parent))
 
 from .storage import GraphStorage
 from .models import NodeType, EdgeType
+from cache.query_cache import QueryCache, CacheConfig, CacheWarmer
 
 load_dotenv()
 
 
 class LLMQueryEngine:
-    """Enhanced query engine powered by Groq LLM."""
+    """Enhanced query engine powered by Groq LLM with intelligent caching."""
     
-    def __init__(self, storage: GraphStorage):
+    def __init__(self, storage: GraphStorage, enable_cache: bool = True):
         self.storage = storage
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model = "llama-3.1-8b-instant"  # Production model that supports JSON response
         
+        # Initialize cache layer
+        self.cache_enabled = enable_cache
+        if enable_cache:
+            cache_config = CacheConfig(
+                max_size=100,  # Cache up to 100 queries
+                ttl_seconds=30,  # 30 second TTL as requested
+                similarity_threshold=0.85,  # 85% similarity for fuzzy matching
+                enable_fuzzy_matching=True,
+                auto_refresh=True
+            )
+            self.cache = QueryCache(config=cache_config)
+            
+            # Initialize cache warmer for popular queries
+            self.cache_warmer = CacheWarmer(
+                cache=self.cache,
+                refresh_callback=self._refresh_query
+            )
+            self.cache_warmer.start()
+        else:
+            self.cache = None
+            self.cache_warmer = None
+        
     def query(self, question: str) -> Dict[str, Any]:
-        """Process a natural language query using LLM understanding."""
+        """
+        Process a natural language query with cache-first approach.
+        
+        Flow:
+        1. Check cache for exact or similar query
+        2. If cache hit -> return cached response (COST SAVED!)
+        3. If cache miss -> call LLM -> cache result -> return
+        
+        Args:
+            question: Natural language query
+            
+        Returns:
+            Query result dictionary
+        """
         try:
+            # STEP 1: Check cache first (cache-aside pattern)
+            if self.cache_enabled and self.cache:
+                cached_result = self.cache.get(question)
+                if cached_result is not None:
+                    # Cache HIT - return immediately, save LLM tokens!
+                    cached_result["cache_hit"] = True
+                    cached_result["cost_saved"] = True
+                    return cached_result
+            
+            # STEP 2: Cache MISS - proceed with LLM query
             # Get graph context for the LLM
             graph_context = self._get_graph_context()
             
@@ -124,7 +176,7 @@ RESPOND WITH ONLY THE JSON OBJECT:
             return None
     
     def _execute_analyzed_query(self, question: str, analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute query based on LLM analysis."""
+        """Execute query based on LLM analysis and cache the result."""
         query_type = analysis.get("query_type", "general")
         entities = analysis.get("entities", [])
         intent = analysis.get("intent", "")
@@ -135,7 +187,8 @@ RESPOND WITH ONLY THE JSON OBJECT:
             "type": query_type,
             "intent": intent,
             "confidence": confidence,
-            "llm_powered": True
+            "llm_powered": True,
+            "cache_hit": False  # This is a fresh LLM query
         }
         
         # Route to appropriate handler
@@ -153,6 +206,10 @@ RESPOND WITH ONLY THE JSON OBJECT:
             result.update(self._handle_database_info(entities))
         else:
             result.update(self._handle_general_info())
+        
+        # STEP 3: Cache the result for future queries
+        if self.cache_enabled and self.cache:
+            self.cache.set(question, result)
         
         return result
     
@@ -476,7 +533,105 @@ RESPOND WITH ONLY THE JSON OBJECT:
         """Fallback to regex-based query processing."""
         from .query import QueryEngine
         fallback_engine = QueryEngine(self.storage)
-        result = fallback_engine.query(question)
-        result["llm_powered"] = False
-        result["fallback"] = True
-        return result
+        return fallback_engine.query(question)
+    
+    # ============ Cache Management Methods ============
+    
+    def _refresh_query(self, query: str) -> None:
+        """
+        Refresh a cached query (called by cache warmer).
+        
+        This is used for popular queries that are approaching expiration.
+        We re-execute the query and update the cache.
+        """
+        try:
+            # Temporarily disable cache to force fresh LLM query
+            original_cache_state = self.cache_enabled
+            self.cache_enabled = False
+            
+            # Execute fresh query
+            result = self.query(query)
+            
+            # Re-enable cache and store result
+            self.cache_enabled = original_cache_state
+            if self.cache:
+                self.cache.set(query, result)
+                
+        except Exception as e:
+            print(f"Failed to refresh query '{query}': {e}")
+    
+    def get_cache_stats(self) -> Dict[str, Any]:
+        """
+        Get cache performance statistics.
+        
+        Returns comprehensive cache metrics including:
+        - Hit rate
+        - Cache size
+        - Most popular queries
+        - Cost savings estimate
+        """
+        if not self.cache:
+            return {"cache_enabled": False}
+        
+        stats = self.cache.get_stats()
+        popular_queries = self.cache.get_popular_queries(top_n=5)
+        
+        # Estimate cost savings (rough approximation)
+        # Assume: 1 LLM call = ~500 tokens at $0.10 per 1M tokens
+        tokens_per_query = 500
+        cost_per_million_tokens = 0.10
+        tokens_saved = stats["hits"] * tokens_per_query
+        cost_saved = (tokens_saved / 1_000_000) * cost_per_million_tokens
+        
+        return {
+            "cache_enabled": True,
+            **stats,
+            "popular_queries": [
+                {"query": q, "hits": count} 
+                for q, count in popular_queries
+            ],
+            "estimated_tokens_saved": tokens_saved,
+            "estimated_cost_saved_usd": round(cost_saved, 4),
+            "refresh_candidates": len(self.cache.get_refresh_candidates())
+        }
+    
+    def invalidate_cache(self, query: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Invalidate cache entries.
+        
+        Args:
+            query: Specific query to invalidate, or None to clear all
+            
+        Returns:
+            Dictionary with invalidation result
+        """
+        if not self.cache:
+            return {"cache_enabled": False, "invalidated": 0}
+        
+        count = self.cache.invalidate(query)
+        return {
+            "cache_enabled": True,
+            "invalidated": count,
+            "query": query if query else "all"
+        }
+    
+    def clean_expired_cache(self) -> Dict[str, Any]:
+        """
+        Manually trigger cleanup of expired cache entries.
+        
+        Returns:
+            Number of expired entries removed
+        """
+        if not self.cache:
+            return {"cache_enabled": False, "cleaned": 0}
+        
+        count = self.cache.clean_expired()
+        return {
+            "cache_enabled": True,
+            "cleaned": count
+        }
+    
+    def shutdown(self):
+        """Gracefully shutdown the query engine and cache warmer."""
+        if self.cache_warmer:
+            self.cache_warmer.stop()

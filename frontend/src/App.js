@@ -1,6 +1,19 @@
 import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import EnterpriseDashboard from './components/EnterpriseDashboard';
+import { ThemeProvider } from './components/ThemeProvider';
+import { ToastProvider } from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('access_token');
+  return token ? children : <Navigate to="/login" replace />;
+};
 
 function App() {
   
@@ -35,9 +48,38 @@ function App() {
   }, []);
 
   return (
-    <div className="App">
-      <EnterpriseDashboard />
-    </div>
+    <ThemeProvider>
+      <ToastProvider>
+        <ErrorBoundary>
+          <Router>
+            <div className="App">
+              <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <EnterpriseDashboard />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Redirect old route to dashboard */}
+          <Route path="/app" element={<Navigate to="/dashboard" replace />} />
+          
+          {/* 404 - Redirect to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
+        </ErrorBoundary>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }
 

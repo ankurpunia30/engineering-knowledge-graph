@@ -2,12 +2,14 @@
 Enhanced chat interface for the Engineering Knowledge Graph with React frontend support.
 Includes Part 4 Natural Language Interface functionality.
 """
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Dict, Any, List, Optional, Union
+from datetime import datetime
 import uvicorn
 import os
 import tempfile
@@ -31,6 +33,20 @@ from graph.storage_factory import create_optimal_storage
 from graph.query import QueryEngine
 from connectors import registry
 from chat.llm_interface import NaturalLanguageInterface, LocalPatternProvider, OpenAIProvider
+
+# Import authentication - Use PostgreSQL for production
+try:
+    from auth.pg_auth_manager import PostgreSQLAuthManager as AuthManager
+    from auth.pg_auth_manager import oauth2_scheme
+    from auth.models import UserCreate, UserLogin, Token, User as AuthUser
+    from auth.database import get_db
+    USE_POSTGRES = True
+    print("✅ Using PostgreSQL authentication")
+except Exception as e:
+    print(f"⚠️ PostgreSQL not available, falling back to file-based auth: {e}")
+    from auth.auth_manager import AuthManager, oauth2_scheme
+    from auth.models import UserCreate, UserLogin, Token, User as AuthUser
+    USE_POSTGRES = False
 
 # Try to import Neo4j storage
 try:
@@ -96,6 +112,12 @@ class EKGChatAPI:
             version="3.0.0",
             description="Natural language interface for infrastructure knowledge with advanced query capabilities"
         )
+        
+        # Initialize authentication manager
+        if USE_POSTGRES:
+            self.auth_manager = AuthManager()  # PostgreSQL version doesn't need path
+        else:
+            self.auth_manager = AuthManager(storage_path="data/users.json")
         
         # Add CORS middleware for React frontend
         # Allow localhost for development and Render URL for production
@@ -176,6 +198,33 @@ class EKGChatAPI:
         if not groq_key and not openai_key:
             print("💡 Tip: Set GROQ_API_KEY or OPENAI_API_KEY environment variable for better accuracy")
     
+    def get_current_user_dependency(self):
+        """Dependency to get current user from JWT token."""
+        async def _get_current_user(token: str = Depends(oauth2_scheme)) -> AuthUser:
+            try:
+                payload = self.auth_manager.decode_token(token)
+                if not payload:
+                    raise HTTPException(status_code=401, detail="Invalid token")
+                
+                email = payload.get("sub")
+                if USE_POSTGRES:
+                    from auth.database import get_db
+                    db = next(get_db())
+                    user = self.auth_manager.get_user_by_email(db, email)
+                else:
+                    user = self.auth_manager.get_user_by_email(email)
+                
+                if not user:
+                    raise HTTPException(status_code=401, detail="User not found")
+                
+                return AuthUser(**{k: v for k, v in user.model_dump().items() if k != 'hashed_password'})
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        
+        return _get_current_user
+    
     def serve_frontend(self):
         """Setup static file serving for React frontend."""
         frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
@@ -222,10 +271,218 @@ class EKGChatAPI:
     def setup_routes(self):
         """Setup API routes."""
         
-        @self.app.post("/api/chat", response_model=ChatResponse)
-        async def chat_endpoint(request: ChatRequest):
-            """Process chat messages using the best available NLI system."""
+        # ========================================================================
+        # AUTHENTICATION API ENDPOINTS
+        # ========================================================================
+        
+        @self.app.post("/api/auth/register", response_model=Token)
+        async def register(user_data: UserCreate):
+            """
+            Register a new user and organization.
+            
+            Creates both a user account and their organization, then returns
+            an access token for immediate authentication.
+            """
             try:
+                # Validate password strength
+                is_valid, message = self.auth_manager.validate_password_strength(user_data.password)
+                if not is_valid:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=message
+                    )
+                
+                # Check if user already exists
+                existing_user = self.auth_manager.get_user_by_email(user_data.email)
+                if existing_user:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Email already registered"
+                    )
+                
+                # Create user and organization
+                user, token = self.auth_manager.create_user(user_data)
+                
+                # Return token response
+                return token
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+        
+        @self.app.post("/api/auth/login", response_model=Token)
+        async def login(credentials: UserLogin):
+            """
+            Authenticate user and return access token.
+            
+            Validates credentials and returns JWT token for authenticated requests.
+            """
+            try:
+                # Use the auth manager's login_user method
+                token = self.auth_manager.login_user(credentials)
+                return token
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
+        
+        @self.app.post("/api/auth/refresh", response_model=Token)
+        async def refresh_token(token: str):
+            """
+            Refresh an existing access token.
+            
+            Validates the current token and issues a new one if valid.
+            """
+            try:
+                # Decode and validate existing token
+                payload = self.auth_manager.decode_token(token)
+                
+                if not payload:
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Invalid or expired token"
+                    )
+                
+                # Get user from token
+                email = payload.get("sub")
+                user = self.auth_manager.get_user_by_email(email)
+                
+                if not user:
+                    raise HTTPException(
+                        status_code=401,
+                        detail="User not found"
+                    )
+                
+                # Create new access token
+                access_token = self.auth_manager.create_access_token(
+                    data={
+                        "sub": user.email,
+                        "user_id": user.id,
+                        "organization_id": user.organization_id,
+                        "role": user.role
+                    }
+                )
+                
+                # Return new token
+                return Token(
+                    access_token=access_token,
+                    token_type="bearer",
+                    expires_in=3600,
+                    user=AuthUser(**{k: v for k, v in user.model_dump().items() if k != 'hashed_password'})
+                )
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Token refresh failed: {str(e)}")
+        
+        @self.app.get("/api/auth/me", response_model=AuthUser)
+        async def get_current_user(token: str = Depends(oauth2_scheme)):
+            """
+            Get current authenticated user information with organization details.
+            
+            Requires valid JWT token in Authorization header.
+            """
+            try:
+                # Decode token
+                payload = self.auth_manager.decode_token(token)
+                
+                if not payload:
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Invalid or expired token"
+                    )
+                
+                # Get user from token
+                email = payload.get("sub")
+                
+                if USE_POSTGRES:
+                    from auth.database import get_db
+                    db = next(get_db())
+                    user = self.auth_manager.get_user_by_email(db, email)
+                else:
+                    user = self.auth_manager.get_user_by_email(email)
+                
+                if not user:
+                    raise HTTPException(
+                        status_code=401,
+                        detail="User not found"
+                    )
+                
+                # Return user without password
+                return AuthUser(**{k: v for k, v in user.model_dump().items() if k != 'hashed_password'})
+                
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=401, detail=f"Authentication failed: {str(e)}")
+        
+        @self.app.get("/api/organization/info")
+        async def get_organization_info(current_user: AuthUser = Depends(self.get_current_user_dependency)):
+            """
+            Get current user's organization information and statistics.
+            """
+            try:
+                org_id = current_user.organization_id
+                
+                # Count organization-specific nodes and edges
+                org_nodes = sum(
+                    1 for node in self.storage.kg.nodes.values()
+                    if node.properties.get('organization_id') == org_id
+                )
+                org_edges = sum(
+                    1 for edge in self.storage.kg.edges.values()
+                    if self.storage.kg.nodes.get(edge.source, {}).properties.get('organization_id') == org_id
+                )
+                
+                # Get organization users count (if available)
+                users_count = 1  # At least the current user
+                if USE_POSTGRES:
+                    from auth.database import get_db
+                    db = next(get_db())
+                    try:
+                        from auth.db_models import User as DBUser
+                        users_count = db.query(DBUser).filter(DBUser.organization_id == org_id).count()
+                    except:
+                        pass
+                
+                return {
+                    "organization_id": org_id,
+                    "organization_name": current_user.organization_name,
+                    "user_email": current_user.email,
+                    "user_name": current_user.full_name,
+                    "user_role": current_user.role,
+                    "statistics": {
+                        "nodes": org_nodes,
+                        "edges": org_edges,
+                        "users": users_count,
+                        "total_nodes_in_system": len(self.storage.kg.nodes),
+                        "total_edges_in_system": len(self.storage.kg.edges)
+                    },
+                    "created_at": current_user.created_at.isoformat() if hasattr(current_user, 'created_at') and current_user.created_at else None
+                }
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to get organization info: {str(e)}")
+        
+        # ========================================================================
+        # CHAT AND QUERY ENDPOINTS
+        # ========================================================================
+        
+        @self.app.post("/api/chat", response_model=ChatResponse)
+        async def chat_endpoint(
+            request: ChatRequest,
+            current_user: AuthUser = Depends(self.get_current_user_dependency)
+        ):
+            """Process chat messages using the best available NLI system - organization-scoped."""
+            try:
+                org_id = current_user.organization_id
+                
                 # Priority: Use Groq-based LLM if available (most accurate)
                 if hasattr(self, 'use_groq') and self.use_groq and hasattr(self, 'llm_query_engine'):
                     # Use Groq LLM query engine
@@ -298,14 +555,33 @@ class EKGChatAPI:
                 raise HTTPException(status_code=500, detail=f"Context reset failed: {str(e)}")
         
         @self.app.get("/api/graph/data", response_model=GraphDataResponse)
-        async def get_graph_data():
-            """Get the complete graph data for visualization."""
+        async def get_graph_data(current_user: AuthUser = Depends(self.get_current_user_dependency)):
+            """Get the complete graph data for visualization - filtered by organization."""
             try:
                 stats = self.storage.get_stats()
+                
+                # Filter nodes and edges by organization
+                org_id = current_user.organization_id
+                filtered_nodes = {
+                    k: v.model_dump() 
+                    for k, v in self.storage.kg.nodes.items()
+                    if v.properties.get('organization_id') == org_id or not v.properties.get('organization_id')
+                }
+                filtered_edges = {
+                    k: v.model_dump()
+                    for k, v in self.storage.kg.edges.items()
+                    if (v.source in filtered_nodes and v.target in filtered_nodes)
+                }
+                
                 return GraphDataResponse(
-                    nodes={k: v.model_dump() for k, v in self.storage.kg.nodes.items()},
-                    edges={k: v.model_dump() for k, v in self.storage.kg.edges.items()},
-                    statistics=stats
+                    nodes=filtered_nodes,
+                    edges=filtered_edges,
+                    statistics={
+                        **stats,
+                        'filtered_by_organization': org_id,
+                        'organization_nodes': len(filtered_nodes),
+                        'organization_edges': len(filtered_edges)
+                    }
                 )
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to get graph data: {str(e)}")
@@ -317,6 +593,66 @@ class EKGChatAPI:
                 return self.storage.get_stats()
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+        
+        # ========================================================================
+        # CACHE MANAGEMENT API ENDPOINTS (Cost Optimization Layer)
+        # ========================================================================
+        
+        @self.app.get("/api/cache/stats")
+        async def get_cache_stats():
+            """
+            Get cache performance statistics and cost savings.
+            
+            Returns comprehensive metrics including:
+            - Hit rate and cache efficiency
+            - Estimated token savings
+            - Estimated cost savings in USD
+            - Popular queries
+            - Cache size and utilization
+            """
+            try:
+                if hasattr(self, 'llm_query_engine') and self.llm_query_engine:
+                    return self.llm_query_engine.get_cache_stats()
+                return {"cache_enabled": False, "message": "LLM query engine not available"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to get cache stats: {str(e)}")
+        
+        @self.app.post("/api/cache/invalidate")
+        async def invalidate_cache(query: Optional[str] = None):
+            """
+            Invalidate cache entries.
+            
+            Query param:
+                query: Specific query to invalidate, or omit to clear entire cache
+            
+            Use cases:
+            - Clear all cache after graph updates
+            - Remove specific stale queries
+            - Reset cache during testing
+            """
+            try:
+                if hasattr(self, 'llm_query_engine') and self.llm_query_engine:
+                    result = self.llm_query_engine.invalidate_cache(query)
+                    return result
+                return {"cache_enabled": False, "message": "LLM query engine not available"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to invalidate cache: {str(e)}")
+        
+        @self.app.post("/api/cache/clean")
+        async def clean_expired_cache():
+            """
+            Manually trigger cleanup of expired cache entries.
+            
+            Removes entries older than TTL (30 seconds by default).
+            Automatically runs periodically, but can be triggered manually.
+            """
+            try:
+                if hasattr(self, 'llm_query_engine') and self.llm_query_engine:
+                    result = self.llm_query_engine.clean_expired_cache()
+                    return result
+                return {"cache_enabled": False, "message": "LLM query engine not available"}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to clean cache: {str(e)}")
         
         # ========================================================================
         # PART 3 QUERY ENGINE API ENDPOINTS
@@ -342,9 +678,10 @@ class EKGChatAPI:
             node_type: Optional[str] = None,
             team: Optional[str] = None,
             environment: Optional[str] = None,
-            limit: Optional[int] = None
+            limit: Optional[int] = None,
+            current_user: AuthUser = Depends(self.get_current_user_dependency)
         ):
-            """Get nodes by type and filters."""
+            """Get nodes by type and filters (organization-scoped)."""
             try:
                 filters = {}
                 if team:
@@ -352,9 +689,12 @@ class EKGChatAPI:
                 if environment:
                     filters["environment"] = environment
                 
+                # Add organization filter
+                filters["organization_id"] = current_user.organization_id
+                
                 result = self.query_engine.get_nodes(
                     node_type=node_type,
-                    filters=filters if filters else None,
+                    filters=filters,
                     limit=limit
                 )
                 return {
@@ -371,12 +711,24 @@ class EKGChatAPI:
         async def get_downstream(
             node_id: str,
             max_depth: int = 10,
-            edge_types: Optional[str] = None
+            edge_types: Optional[str] = None,
+            current_user: AuthUser = Depends(self.get_current_user_dependency)
         ):
-            """Get transitive dependencies (what this node depends on)."""
+            """Get transitive dependencies (what this node depends on) - organization-scoped."""
             try:
+                # Verify node belongs to user's organization
+                node = self.graph_storage.get_node(node_id)
+                if not node or node.properties.get('organization_id') != current_user.organization_id:
+                    raise HTTPException(status_code=404, detail="Node not found in your organization")
+                
                 edge_type_list = edge_types.split(",") if edge_types else None
                 result = self.query_engine.downstream(node_id, max_depth, edge_type_list)
+                
+                # Filter results to only include organization's nodes
+                if result.success and result.data:
+                    result.data = [n for n in result.data 
+                                   if self.graph_storage.get_node(n).properties.get('organization_id') == current_user.organization_id]
+                
                 return {
                     "success": result.success,
                     "data": result.data,
@@ -391,12 +743,24 @@ class EKGChatAPI:
         async def get_upstream(
             node_id: str,
             max_depth: int = 10,
-            edge_types: Optional[str] = None
+            edge_types: Optional[str] = None,
+            current_user: AuthUser = Depends(self.get_current_user_dependency)
         ):
-            """Get transitive dependents (what depends on this node)."""
+            """Get transitive dependents (what depends on this node) - organization-scoped."""
             try:
+                # Verify node belongs to user's organization
+                node = self.graph_storage.get_node(node_id)
+                if not node or node.properties.get('organization_id') != current_user.organization_id:
+                    raise HTTPException(status_code=404, detail="Node not found in your organization")
+                
                 edge_type_list = edge_types.split(",") if edge_types else None
                 result = self.query_engine.upstream(node_id, max_depth, edge_type_list)
+                
+                # Filter results to only include organization's nodes
+                if result.success and result.data:
+                    result.data = [n for n in result.data 
+                                   if self.graph_storage.get_node(n).properties.get('organization_id') == current_user.organization_id]
+                
                 return {
                     "success": result.success,
                     "data": result.data,
@@ -408,10 +772,25 @@ class EKGChatAPI:
                 raise HTTPException(status_code=500, detail=f"Failed to get upstream: {str(e)}")
         
         @self.app.get("/api/query/blast-radius/{node_id}")
-        async def get_blast_radius(node_id: str, max_depth: int = 5):
-            """Get comprehensive impact analysis."""
+        async def get_blast_radius(
+            node_id: str, 
+            max_depth: int = 5,
+            current_user: AuthUser = Depends(self.get_current_user_dependency)
+        ):
+            """Get comprehensive impact analysis - organization-scoped."""
             try:
+                # Verify node belongs to user's organization
+                node = self.graph_storage.get_node(node_id)
+                if not node or node.properties.get('organization_id') != current_user.organization_id:
+                    raise HTTPException(status_code=404, detail="Node not found in your organization")
+                
                 result = self.query_engine.blast_radius(node_id, max_depth)
+                
+                # Filter affected nodes to only include organization's nodes
+                if result.success and result.data and 'affected_nodes' in result.data:
+                    result.data['affected_nodes'] = [n for n in result.data['affected_nodes']
+                                                      if self.graph_storage.get_node(n).properties.get('organization_id') == current_user.organization_id]
+                
                 return {
                     "success": result.success,
                     "data": result.data,
@@ -455,10 +834,13 @@ class EKGChatAPI:
         @self.app.post("/api/upload", response_model=FileUploadResponse)
         async def upload_configuration_file(
             file: UploadFile = File(...),
-            file_type: str = Form(...)
+            file_type: str = Form(...),
+            current_user: AuthUser = Depends(self.get_current_user_dependency)
         ):
-            """Upload and process a configuration file."""
+            """Upload and process a configuration file - tagged with organization."""
             try:
+                org_id = current_user.organization_id
+                
                 # Validate file type
                 supported_types = ['docker-compose', 'kubernetes', 'teams']
                 if file_type not in supported_types:
@@ -505,6 +887,12 @@ class EKGChatAPI:
                     
                     # Parse and get the knowledge graph
                     knowledge_graph = connector.parse()
+                    
+                    # Tag all nodes with organization_id
+                    for node_id, node in knowledge_graph.nodes.items():
+                        node.properties['organization_id'] = org_id
+                        node.properties['uploaded_by'] = current_user.email
+                        node.properties['uploaded_at'] = datetime.utcnow().isoformat()
                     
                     # Update storage with new data using merge_graph
                     self.storage.merge_graph(knowledge_graph)

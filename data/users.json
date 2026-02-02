@@ -1,0 +1,28 @@
+{
+  "users": {
+    "user_1b2af51c66a0": {
+      "id": "user_1b2af51c66a0",
+      "email": "ankurpunia28@gmail.com",
+      "full_name": "Ankur Ankur",
+      "organization_id": "org_56bd5838676b",
+      "organization_name": "Ankurinc",
+      "role": "admin",
+      "is_active": true,
+      "created_at": "2026-02-01T13:11:07.259318",
+      "last_login": "2026-02-02T11:41:26.680253",
+      "hashed_password": "$2b$12$MsGZ.hGsk1KXgsf/tIHniOs3JM2IOrOXo8NGj96gkFNZi7IAd5Hb2"
+    }
+  },
+  "organizations": {
+    "org_56bd5838676b": {
+      "id": "org_56bd5838676b",
+      "name": "Ankurinc",
+      "plan": "free",
+      "created_at": "2026-02-01T13:11:07.074460",
+      "owner_id": "user_1b2af51c66a0",
+      "member_count": 1,
+      "graph_node_limit": 1000,
+      "is_active": true
+    }
+  }
+}

@@ -53,6 +53,7 @@ const EnterpriseDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState('dashboard');
   const [stats, setStats] = useState({ totalNodes: 0, services: 0, databases: 0, teams: 0, edges: 0 });
+  const [organizationInfo, setOrganizationInfo] = useState(null);
   const [backendStatus, setBackendStatus] = useState({ connected: false });
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -73,6 +74,26 @@ const EnterpriseDashboard = () => {
   const graphRef = useRef();
   const fileInputRef = useRef();
 
+  const loadOrganizationInfo = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const response = await fetch(`${API_BASE}/api/organization/info`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setOrganizationInfo(data);
+      }
+    } catch (error) {
+      console.error('Failed to load organization info:', error);
+    }
+  }, []);
+
   const checkBackendHealth = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/api/health`);
@@ -84,7 +105,10 @@ const EnterpriseDashboard = () => {
 
   const loadGraphData = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/graph/data`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
+      const response = await fetch(`${API_BASE}/api/graph/data`, { headers });
       if (!response.ok) throw new Error('Failed to load');
       
       const data = await response.json();
@@ -114,9 +138,10 @@ const EnterpriseDashboard = () => {
   useEffect(() => {
     checkBackendHealth();
     loadGraphData();
+    loadOrganizationInfo();
     const interval = setInterval(checkBackendHealth, 30000);
     return () => clearInterval(interval);
-  }, [checkBackendHealth, loadGraphData]);
+  }, [checkBackendHealth, loadGraphData, loadOrganizationInfo]);
 
   // ESC key handler for fullscreen mode
   useEffect(() => {
@@ -450,7 +475,41 @@ const EnterpriseDashboard = () => {
   }, [searchQuery, graphData.nodes]);
 
   return (
-    <div className="flex h-screen bg-gray-50" style={{ overflow: 'hidden', width: '100vw', height: '100vh' }}>
+    <div className="flex h-screen bg-gray-50" style={{ overflow: 'hidden', width: '100vw', height: '100vh', paddingTop: organizationInfo ? '56px' : '0' }}>
+      {/* Organization Info Bar */}
+      {organizationInfo && (
+        <div className="absolute top-0 left-0 right-0 bg-gray-900 text-white px-6 py-3 flex justify-between items-center border-b border-gray-800 z-50">
+          <div className="flex items-center space-x-6">
+            <div>
+              <span className="text-gray-400 text-sm">Organization:</span>
+              <span className="ml-2 font-semibold">{organizationInfo.organization_name}</span>
+            </div>
+            <div>
+              <span className="text-gray-400 text-sm">Your Data:</span>
+              <span className="ml-2">{organizationInfo.statistics.nodes} nodes, {organizationInfo.statistics.edges} edges</span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-300">{organizationInfo.user_name} ({organizationInfo.user_role})</span>
+            <button 
+              onClick={() => { 
+                if (window.confirm('Are you sure you want to logout?')) {
+                  localStorage.removeItem('token'); 
+                  localStorage.removeItem('refresh_token');
+                  window.location.href = '/'; 
+                }
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Sidebar - Hidden when Explorer is active */}
       {activeView !== 'explorer' && (
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col" style={{ overflow: 'hidden' }}>
@@ -499,7 +558,7 @@ const EnterpriseDashboard = () => {
         </div>
 
         <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 text-sm mb-3">
             {backendStatus.connected ? (
               <>
                 <CheckCircle2 size={16} className="text-green-500" />
@@ -512,6 +571,25 @@ const EnterpriseDashboard = () => {
               </>
             )}
           </div>
+          
+          {/* Logout Button */}
+          {organizationInfo && (
+            <button
+              onClick={() => { 
+                if (window.confirm('Are you sure you want to logout?')) {
+                  localStorage.removeItem('token'); 
+                  localStorage.removeItem('refresh_token');
+                  window.location.href = '/'; 
+                }
+              }}
+              className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          )}
         </div>
         </div>
       )}

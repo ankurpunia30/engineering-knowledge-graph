@@ -1,0 +1,2 @@
+# This file indicates favicon exists
+# The actual favicon is served as favicon.svg

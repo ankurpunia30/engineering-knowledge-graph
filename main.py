@@ -310,3 +310,9 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# FastAPI app instance for uvicorn
+# Usage: uvicorn main:app --reload
+chat_api = EKGChatAPI()
+app = chat_api.app
